@@ -2,6 +2,8 @@
 
 Vanilla ChatGPT 챗봇에 세 기능을 더하고 빼며(2×2×2 = 8개 구성) 효과를 측정하는 실험 코드다.
 
+실험·평가 계획서: [docs/HW2_실험_평가_계획서.md](docs/HW2_실험_평가_계획서.md) (Word 파일: [docx](docs/HW2_실험_평가_계획서.docx))
+
 | 기능 | 하는 일 | 코드 |
 | --- | --- | --- |
 | Tool 1 데이터 | DART 재무제표·일별 주가의 **원값**을 function calling으로 조회 | `Tools/tool1_data.py` |
