@@ -38,7 +38,7 @@ TOOL1_SPECS = [
          "date": {"type": "string", "description": "YYYY-MM-DD"}},
         ["company", "date"]),
     _fn("get_price_series",
-        "적립식 투자 계산용. start_date가 속한 달부터 매월 첫 거래일의 수정 종가 목록과 "
+        "적립식 투자 계산용. start_date 이후 도래하는 매월 첫 거래일의 수정 종가 목록과 "
         "end_date(생략 시 오늘)의 수정 종가를 조회한다.",
         {"company": {"type": "string"},
          "start_date": {"type": "string", "description": "YYYY-MM-DD"},

@@ -149,14 +149,13 @@ def last_on_or_before(prices: list, yyyymmdd: str):
 
 
 def monthly_first_trading_days(prices: list, start: str, end: str) -> list:
-    """start가 속한 달부터 end까지 매월 첫 거래일들.
-    "3년 전(2023-10-30)부터 매달"은 2023년 10월 첫 거래일부터 산다 (dev 결과 검토 후 정한 규칙)."""
+    """start 이후(포함) 도래하는 매월 첫 거래일들. 그달 첫 거래일이 start보다 앞이면 그달은 건너뛴다."""
     seen, out = set(), []
     for d, p in prices:
         month = d[:6]
         if month in seen:
             continue
         seen.add(month)  # 이 날짜가 그달의 첫 거래일이다
-        if start[:6] <= month and d <= end:
+        if start <= d <= end:
             out.append((d, p))
     return out

@@ -35,7 +35,7 @@ MODEL = os.getenv("HW2_MODEL", "gpt-4o-mini")
 AUX_MODEL = os.getenv("HW2_AUX_MODEL", "gpt-4o-mini")
 TEMPERATURE = 0          # 같은 입력에 최대한 같은 출력이 나오게 한다
 SEED = 42                # OpenAI가 지원하는 범위에서 재현성을 높인다
-MAX_TOOL_STEPS = 10      # 한 턴에서 도구 호출 → 결과 → 재호출을 반복하는 최대 횟수
+MAX_TOOL_STEPS = 6       # 한 턴에서 도구 호출 → 결과 → 재호출을 반복하는 최대 횟수
 TOOL_RESULT_MAX_CHARS = 8000  # 도구 결과를 대화에 넣을 때 자르는 길이 (토큰 폭주 방지)
 
 # ---------------------------------------------------------------------------

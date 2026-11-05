@@ -79,8 +79,6 @@ def attribute(cfg: str, gold: dict, score: dict, trace: dict, turn_index: int = 
     if status != "ok" or score.get("correct1"):
         return None, ""
     if score["abstained"]:
-        if turn_index > 0 and score.get("n_claims", 0) > 0:
-            return "E7", "숫자는 답했으나 물은 값이 아님 (이전 턴의 다른 지표로 답함)"
         return "E8", "답할 수 있는 질문에 답하지 않음"
 
     tool1 = config.CONFIGS.get(cfg, (False,))[0]

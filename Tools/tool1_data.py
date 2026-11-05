@@ -180,7 +180,7 @@ def get_price(company: str, date: str) -> dict:
 
 
 def get_price_series(company: str, start_date: str, end_date: str = "") -> dict:
-    """start_date가 속한 달부터 매월 첫 거래일의 수정 종가 목록과 end_date(기본: 기준일)의 수정 종가.
+    """start_date 이후 매월 첫 거래일의 수정 종가 목록과 end_date(기본: 기준일)의 수정 종가.
 
     적립식 투자 계산에 쓴다. 계산은 하지 않는다.
     """
@@ -208,7 +208,7 @@ def get_price_series(company: str, start_date: str, end_date: str = "") -> dict:
     out = {
         "company": corp["corp_name"],
         "stock_code": corp["stock_code"],
-        "rule": "시작일이 속한 달부터 매월 첫 거래일의 수정 종가",
+        "rule": "시작일 이후 도래하는 매월 첫 거래일의 수정 종가",
         "monthly_first_trading_day_adj_close": [{"date": nz.fmt_date(d), "adj_close": round(p, 4)} for d, p in monthly],
         "end": {"date": nz.fmt_date(last[0]), "adj_close": round(last[1], 4)},
         "unit": "원",

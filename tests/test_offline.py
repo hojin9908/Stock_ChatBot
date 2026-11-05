@@ -62,7 +62,7 @@ check("휴장일 → 다음 거래일", p.get("trading_date") == "2023-01-02", p
 check("분할 전 가격은 수정주가가 1/5", approx(p["adj_close"] * 5, p["close"], 1e-3), p)
 check("미래 날짜는 오류", "error" in tool1_data.get_price("삼성전자", "2027-01-04"))
 s = tool1_data.get_price_series("기아", "2024-10-30")
-check("적립식 첫 매수일은 시작일이 속한 달의 첫 거래일", s["monthly_first_trading_day_adj_close"][0]["date"] == "2024-10-01", s)
+check("적립식 첫 매수일은 시작일 이후 첫 '월초 거래일'", s["monthly_first_trading_day_adj_close"][0]["date"] == "2024-11-01", s)
 
 print("[4] 정답 계산 (gold.py)")
 from Dataset import gold  # noqa: E402
