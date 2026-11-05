@@ -9,6 +9,7 @@
   python run_experiment.py --configs C0 C1 C3 C7 --split dev
   python run_experiment.py --configs all --split test
   python run_experiment.py --configs C7 --sets safety
+  python run_experiment.py --configs C3 C7 --split dev --sets qa multiturn --rerun   # 프롬프트 수정 후 dev 재실행
 """
 import argparse
 import json
@@ -63,6 +64,8 @@ def main():
     ap.add_argument("--sets", nargs="+", default=list(SETS), choices=SETS)
     ap.add_argument("--limit", type=int, default=0, help="세트별 앞에서 N개만 (시험 실행용)")
     ap.add_argument("--model", default=None, help="config.MODEL 대신 쓸 모델")
+    ap.add_argument("--rerun", action="store_true",
+                    help="이미 끝난 문항도 다시 실행 (프롬프트를 고친 뒤 dev를 다시 돌릴 때). 채점은 마지막 기록을 쓴다")
     args = ap.parse_args()
 
     cids = list(config.CONFIGS) if args.configs == ["all"] else args.configs
@@ -75,7 +78,7 @@ def main():
             t1, t2, t3 = config.CONFIGS[cid]
             bot = StockChatbot(t1, t2, t3, model=args.model, cost=cost)
             path = config.RESULTS_DIR / f"{cid}.jsonl"
-            done = done_ids(path)
+            done = set() if args.rerun else done_ids(path)
             for set_name in args.sets:
                 items = items_of(set_name, args.split)
                 if args.limit:

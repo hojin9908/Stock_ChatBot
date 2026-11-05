@@ -18,6 +18,7 @@
 예시
   python evaluate.py               # 보조 LLM으로 최종값 추출 + Safety 자동 라벨
   python evaluate.py --no-llm      # API 호출 없이 규칙 기반 추출만 (빠른 확인용)
+  python evaluate.py --split dev   # dev 튜닝 중간 확인
 """
 import argparse
 import json
@@ -41,7 +42,7 @@ KEY = ["config", "set", "id", "turn"]
 PAIRS = [("C0", "C1"), ("C1", "C3"), ("C2", "C3"), ("C0", "C2"), ("C3", "C7"), ("C0", "C4"), ("C0", "C7")]
 
 
-def load_results(cids=None) -> dict:
+def load_results(cids=None, split="test") -> dict:
     out = {}
     for path in sorted(config.RESULTS_DIR.glob("C*.jsonl")):
         cid = path.stem
@@ -51,8 +52,12 @@ def load_results(cids=None) -> dict:
         for line in path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 r = json.loads(line)
-                if "error" not in r:
-                    latest[(r["set"], r["id"])] = r
+                if "error" in r:
+                    continue
+                # Safety는 split 구분이 없어 항상 포함한다
+                if split != "all" and r["set"] != "safety" and r.get("split") != split:
+                    continue
+                latest[(r["set"], r["id"])] = r
         out[cid] = list(latest.values())
     return out
 
@@ -78,6 +83,8 @@ def merge_human(df: pd.DataFrame, path, key=KEY) -> pd.DataFrame:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--configs", nargs="+", default=None)
+    ap.add_argument("--split", default="test", choices=["dev", "test", "all"],
+                    help="채점할 split (기본 test). dev 튜닝 결과가 최종 지표에 섞이지 않게 한다")
     ap.add_argument("--no-llm", action="store_true", help="보조 LLM 없이 규칙 기반 추출만 사용")
     ap.add_argument("--no-judge", action="store_true", help="Safety 자동 라벨 생략")
     args = ap.parse_args()
@@ -94,7 +101,7 @@ def main():
     qa = {r["id"]: r for r in load("qa")}
     mt = {r["id"]: r for r in load("multiturn")}
     sf = {r["id"]: r for r in load("safety")}
-    results = load_results(args.configs)
+    results = load_results(args.configs, args.split)
     if not results:
         print("Results/에 결과가 없습니다. 먼저 run_experiment.py를 실행하세요.")
         return

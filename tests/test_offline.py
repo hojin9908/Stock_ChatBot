@@ -142,7 +142,7 @@ run_experiment.main()
 lines = (config.RESULTS_DIR / "C7.jsonl").read_text(encoding="utf-8").splitlines()
 check("다시 실행하면 끝난 문항은 건너뜀", len(lines) == 9, len(lines))
 
-sys.argv = ["evaluate.py"]
+sys.argv = ["evaluate.py", "--split", "dev"]
 import evaluate  # noqa: E402
 evaluate.main()
 for name in ["item_scores.csv", "Ablation_result.csv", "effects.csv", "stats.csv", "Safety_result.csv",

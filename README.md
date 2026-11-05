@@ -41,29 +41,34 @@ git update-index --skip-worktree .env
 # (0) 코드가 끝까지 도는지 가짜 API로 확인 (키·네트워크 불필요, 약 10초)
 python -m tests.test_offline
 
-# (1) 평가 질문 파일 생성 (이미 만들어져 있다. 질문을 고쳤을 때만 다시 실행)
-python -m Dataset.build_dataset
-
-# (2) 정답 계산 + API 응답 캐시 채우기 (실제 키 필요, 처음 1회 수 분 소요)
+# (1) 정답 계산 + API 응답 캐시 채우기 (실제 키 필요, 처음 1회 수 분)
 python -m Dataset.gold
 
-# (3) 대화로 동작 확인
+# (2) 대화로 동작 확인
 python chat.py --config C7 --show-trace
 
-# (4) dev셋으로 소규모 실행 → 프롬프트 조정
-python run_experiment.py --configs C0 C1 C3 C7 --split dev
+# (3) 비용 실측용 소규모 실행
+python run_experiment.py --configs C0 C3 C7 --split dev --limit 3
+python check_budget.py
 
-# (5) 본 실험: 캐시만 쓰도록 고정하고 test셋 전체 실행
-HW2_CACHE_ONLY=1 python run_experiment.py --configs all --split test   # Windows: set HW2_CACHE_ONLY=1
+# (4) dev셋 튜닝: 실행 → 채점 → 프롬프트 수정 → 다시 실행(--rerun) 반복
+python run_experiment.py --configs C0 C1 C3 C7 --split dev --sets qa multiturn
+python evaluate.py --split dev
+python run_experiment.py --configs C0 C1 C3 C7 --split dev --sets qa multiturn --rerun
 
-# (6) 채점
+# (5) 본 실험: 8개 구성 × test셋 + Safety
+python run_experiment.py --configs all --split test
+
+# (6) 채점 (기본값이 test셋이라 dev 튜닝 결과는 섞이지 않는다)
 python evaluate.py
 ```
 
-- 중간에 멈춰도 (5)를 다시 실행하면 끝난 문항은 건너뛴다.
+- 질문 파일(`Dataset/*.jsonl`)은 이미 만들어져 있다. 질문을 고쳤을 때만 `python -m Dataset.build_dataset` 후 (1)을 다시 실행한다.
+- 중간에 멈춰도 같은 명령을 다시 실행하면 끝난 문항은 건너뛴다. 프롬프트를 고친 뒤 다시 돌릴 때만 `--rerun`을 붙인다.
+- dev 튜닝에서는 Safety 세트를 돌리지 않는다(`--sets qa multiturn`). Safety는 split 구분이 없어 (5)에서 한 번만 돌린다.
+- 원자료는 처음 받을 때 캐시에 저장되고 이후 항상 캐시를 쓰므로, 8개 구성이 같은 원자료를 본다.
 - 누적 비용이 `config.BUDGET_USD`($10)를 넘으면 자동으로 멈춘다. 누적값은 `Results/_cost_log.json`.
 - 팀 키 사용액 확인: `python check_budget.py --ping` (일반 API 키로는 잔액 조회 API가 없어, 로컬 비용 기록 합산 + 키 상태 확인으로 대신한다)
-- (5)에서 `HW2_CACHE_ONLY=1`을 주면 네트워크를 쓰지 않으므로, 8개 구성이 모두 (2)에서 받은 **같은 원자료**를 본다.
 
 ---
 
