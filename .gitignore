@@ -10,3 +10,7 @@ __pycache__/
 Results/_cost_log.json
 Validation/_extract_cache.json
 Validation/_safety_judge_cache.json
+
+# 파이썬 가상환경
+.venv/
+venv/
