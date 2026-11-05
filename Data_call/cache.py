@@ -41,8 +41,8 @@ def cached_get(
     namespace: str,
     kind: str = "json",
     validate: Optional[Callable] = None,
-    timeout: int = 30,
-    retries: int = 3,
+    timeout: int = 60,
+    retries: int = 5,
 ):
     """GET 요청을 캐시와 함께 수행한다.
 
@@ -88,5 +88,5 @@ def cached_get(
             raise  # 키 오류·한도 초과는 재시도해도 같다
         except requests.RequestException as e:
             last_error = e
-            time.sleep(1.5 * (attempt + 1))
+            time.sleep(3 * (attempt + 1))  # 공공데이터포털은 가끔 수십 초씩 응답이 늦다
     raise ApiResponseError(f"요청 실패 ({retries}회 시도): {last_error}")
