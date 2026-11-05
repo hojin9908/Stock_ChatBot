@@ -11,7 +11,7 @@ import config
 from API_key.API import get_key
 from Data_call.cache import cached_get
 
-PRICE_URL = "https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo"
+PRICE_URL = "https://apis.data.go.kr/1160100/GetStockSecuritiesInfoService_V2/getStockPriceInfo_V2"
 ROWS_PER_PAGE = 1000
 
 
