@@ -92,7 +92,19 @@ def account_value(stock_code: str, year: int, account: str) -> float:
         hit = df[(df["sj_div"] == sj) & (df["nm"].isin(GOLD_NAME_FALLBACK.get(account, set())))]["amount"].dropna()
         if len(hit):
             return float(hit.iloc[0])
+    # 비지배지분이 없는 회사는 지배/비지배 구분 계정을 공시하지 않는다. 이때 지배주주 몫 = 전체다.
+    if account in OWNER_FALLBACK and not has_noncontrolling(df):
+        return account_value(stock_code, year, OWNER_FALLBACK[account])
     raise GoldUnavailable(f"{stock_code} {year}년 {account} 계정 없음")
+
+
+OWNER_FALLBACK = {"지배주주순이익": "당기순이익", "지배주주자본": "자본총계"}
+
+
+def has_noncontrolling(df: pd.DataFrame) -> bool:
+    """재무제표에 비지배지분 계정이 하나라도 있으면 True."""
+    return bool(df["account_id"].astype(str).str.contains("NonControllingInterest").any()
+                or df["nm"].str.contains("비지배").any())
 
 
 _px_memo = {}

@@ -56,7 +56,21 @@ def extract_accounts(rows: list) -> dict:
             if value is not None:
                 break
         out[label] = value
+    # 비지배지분이 없는 회사는 지배/비지배 구분 계정을 공시하지 않는다. 이때 지배주주 몫 = 전체다.
+    if not _has_noncontrolling(rows):
+        for owner, total in OWNER_FALLBACK.items():
+            if out.get(owner) is None and out.get(total) is not None:
+                out[owner] = out[total]
     return out
+
+
+OWNER_FALLBACK = {"지배주주순이익": "당기순이익", "지배주주자본": "자본총계"}
+
+
+def _has_noncontrolling(rows: list) -> bool:
+    """재무제표에 비지배지분 계정이 하나라도 있으면 True."""
+    return any("NonControllingInterest" in str(r.get("account_id", "")) or "비지배" in str(r.get("account_nm", ""))
+               for r in rows)
 
 
 def _resolve(company: str):
