@@ -175,7 +175,8 @@ def invest(sc: str, mode: str, start: str, amount: float):
         buys = [first_trading_row(sc, start)]
     else:
         firsts = df.groupby("month", sort=True).head(1)  # 각 달의 첫 거래일 행
-        buys = [r for _, r in firsts[(firsts["date"] >= start) & (firsts["date"] <= config.REF_DATE)].iterrows()]
+        # 시작일이 속한 달부터 (예: 2023-10-30 시작 → 2023년 10월 첫 거래일부터)
+        buys = [r for _, r in firsts[(firsts["month"] >= start[:6]) & (firsts["date"] <= config.REF_DATE)].iterrows()]
         if not buys:
             raise GoldUnavailable("적립식 매수일 없음")
     shares = sum(amount / b["adj"] for b in buys)
