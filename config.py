@@ -4,7 +4,17 @@
 판단 규칙(“그해 초”가 언제인지 등)의 근거는 README.md의 「판단 규칙」 절을 본다.
 """
 import os
+import sys
 from pathlib import Path
+
+# Windows(특히 Git Bash)에서 한국어 입출력이 깨지거나 진행 상황 출력이 늦게 보이는 것을 막는다.
+# 모든 실행 파일이 이 파일을 가장 먼저 import하므로 여기서 한 번만 설정한다.
+for _stream in (sys.stdin, sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace",
+                            **({} if _stream is sys.stdin else {"line_buffering": True}))
+    except (AttributeError, ValueError, OSError):
+        pass
 
 # ---------------------------------------------------------------------------
 # 경로
