@@ -62,6 +62,7 @@ python evaluate.py
 
 - 중간에 멈춰도 (5)를 다시 실행하면 끝난 문항은 건너뛴다.
 - 누적 비용이 `config.BUDGET_USD`($10)를 넘으면 자동으로 멈춘다. 누적값은 `Results/_cost_log.json`.
+- 팀 키 사용액 확인: `python check_budget.py --ping` (일반 API 키로는 잔액 조회 API가 없어, 로컬 비용 기록 합산 + 키 상태 확인으로 대신한다)
 - (5)에서 `HW2_CACHE_ONLY=1`을 주면 네트워크를 쓰지 않으므로, 8개 구성이 모두 (2)에서 받은 **같은 원자료**를 본다.
 
 ---
