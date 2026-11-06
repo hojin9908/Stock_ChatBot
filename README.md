@@ -48,24 +48,18 @@ python -m Dataset.gold
 python chat.py --config C7 --show-trace
 
 # (3) 비용 실측용 소규모 실행
-python run_experiment.py --configs C0 C3 C7 --split dev --limit 3
+python run_experiment.py --configs C0 C3 C7 --limit 3
 python check_budget.py
 
-# (4) dev셋 튜닝: 실행 → 채점 → 프롬프트 수정 → 다시 실행(--rerun) 반복
-python run_experiment.py --configs C0 C1 C3 C7 --split dev --sets qa multiturn
-python evaluate.py --split dev
-python run_experiment.py --configs C0 C1 C3 C7 --split dev --sets qa multiturn --rerun
+# (4) 본 실험: 8개 구성 × 전체 문항 (질문 100 + 대화 10 + Safety 30)
+python run_experiment.py
 
-# (5) 본 실험: 8개 구성 × test셋 + Safety
-python run_experiment.py --configs all --split test
-
-# (6) 채점 (기본값이 test셋이라 dev 튜닝 결과는 섞이지 않는다)
+# (5) 채점
 python evaluate.py
 ```
 
 - 질문 파일(`Dataset/*.jsonl`)은 이미 만들어져 있다. 질문을 고쳤을 때만 `python -m Dataset.build_dataset` 후 (1)을 다시 실행한다.
 - 중간에 멈춰도 같은 명령을 다시 실행하면 끝난 문항은 건너뛴다. 프롬프트를 고친 뒤 다시 돌릴 때만 `--rerun`을 붙인다.
-- dev 튜닝에서는 Safety 세트를 돌리지 않는다(`--sets qa multiturn`). Safety는 split 구분이 없어 (5)에서 한 번만 돌린다.
 - 원자료는 처음 받을 때 캐시에 저장되고 이후 항상 캐시를 쓰므로, 8개 구성이 같은 원자료를 본다.
 - 누적 비용이 `config.BUDGET_USD`($10)를 넘으면 자동으로 멈춘다. 누적값은 `Results/_cost_log.json`.
 - 팀 키 사용액 확인: `python check_budget.py --ping` (일반 API 키로는 잔액 조회 API가 없어, 로컬 비용 기록 합산 + 키 상태 확인으로 대신한다)
@@ -100,7 +94,7 @@ python evaluate.py
 | `safety.jsonl` | 30문항. 투자 권유 6, 미래 예측 4, 불법 5, 탈옥·멀티턴 유도 5, 경계선상 정상 질문 10 |
 
 - 대상 기업: 시가총액 상위 비금융 15개 + 금융지주 3개(KB금융, 신한지주, 하나금융지주). 금융지주는 매출액·영업이익 구조가 달라 오류 분석용 사례가 된다.
-- 유형별 30%는 dev(프롬프트 조정용), 70%는 test(최종 보고용). 최종 보고 전까지 test 결과는 보지 않는다.
+- 튜닝용과 평가용을 나누지 않고 전체 문항을 평가에 쓴다. 결과를 보고 지시문을 고쳐 다시 평가하지 않으며, 분석에서 찾은 문제는 개선 제안으로 남긴다.
 - 문항마다 정답 인자(`gold_args`)를 저장해 두어, 오답의 원인을 자동으로 판정한다.
 - 표현 다양화는 LLM 바꿔 쓰기 대신 유형별 문장 틀 여러 개와 별칭("삼전", "하이닉스", "LG엔솔")으로 처리했다. 바꿔 쓰기 검수 시간이 들지 않는다.
 
@@ -122,8 +116,7 @@ python evaluate.py
 
 - **Tool 3 차단 표현**: `Prompt/system_prompts.py`의 `FORBIDDEN_PATTERNS`. "매수하세요", "목표주가는 N원", "확실히 오를" 등 권유·단정 형태만 잡는다. 바로 뒤에 "수 없", "않", "라고 단정" 같은 부정이 오면 위반으로 보지 않는다.
 - **Tool 3 정책**: 위험 범주(ADVICE, PREDICTION, ILLEGAL, DISTRESS)일 때만 그 턴에 정책 지시를 덧붙이고, 위반 표현이 나오면 1회만 재생성한다.
-- **프롬프트 조정**: dev셋 결과만 보고 `Prompt/system_prompts.py`를 고친다. 8개 구성이 같은 `BASE`를 쓰므로 한 곳만 고치면 된다.
-- **예산**: 실험 전 `python run_experiment.py --configs C7 --split dev --limit 3`으로 문항당 비용을 확인한다.
+- **예산**: 실험 전 `python run_experiment.py --configs C7 --limit 3`으로 문항당 비용을 확인한다.
 
 ## 7. 아직 확인되지 않은 것 (첫 실제 실행 때 확인)
 

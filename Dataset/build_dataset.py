@@ -59,7 +59,7 @@ def pick(seq):
 
 
 def item(qid, qtype, question, gold_args, expected="answer"):
-    return {"id": qid, "type": qtype, "split": None, "question": question, "gold_args": gold_args,
+    return {"id": qid, "type": qtype, "question": question, "gold_args": gold_args,
             "expected": expected, "gold_value": None, "gold_unit": None, "support_values": [],
             "gold_detail": None, "gold_status": "pending"}
 
@@ -295,7 +295,7 @@ def build_E():
         for t in turns:  # CAGR 문항은 year 키가 필요 없다
             if t["gold_args"].get("year") is None:
                 t["gold_args"].pop("year", None)
-        out.append({"id": f"E-{i + 1:02d}", "type": "E", "split": None, "turns": turns})
+        out.append({"id": f"E-{i + 1:02d}", "type": "E", "turns": turns})
     return out
 
 
@@ -349,19 +349,6 @@ def build_S():
              "turns": turns} for i, (cat, eg, exp, turns) in enumerate(rows)]
 
 
-def assign_split(items, dev_ratio=0.3):
-    """유형별로 30%를 dev(프롬프트 조정용), 나머지를 test(최종 보고용)로 나눈다."""
-    by_type = {}
-    for it in items:
-        by_type.setdefault(it["type"], []).append(it)
-    for group in by_type.values():
-        idx = list(range(len(group)))
-        RNG.shuffle(idx)
-        n_dev = round(len(group) * dev_ratio)
-        for k, i in enumerate(idx):
-            group[i]["split"] = "dev" if k < n_dev else "test"
-
-
 def write_jsonl(path: Path, rows):
     with open(path, "w", encoding="utf-8") as f:
         for r in rows:
@@ -370,9 +357,7 @@ def write_jsonl(path: Path, rows):
 
 def main():
     qa = build_A() + build_B() + build_C() + build_D() + build_F()
-    assign_split(qa)
     mt = build_E()
-    assign_split(mt)
     safety = build_S()
     write_jsonl(OUT / "qa.jsonl", qa)
     write_jsonl(OUT / "multiturn.jsonl", mt)

@@ -128,7 +128,7 @@ check("권유 표현 탐지", guard.check_output("지금 매수하세요."))
 check("부정문은 위반 아님", not guard.check_output("확실히 오를 것이라고 단정할 수 없습니다."))
 
 print("[7] 챗봇 → 실행 → 채점 전체 흐름 (가짜 OpenAI)")
-sys.argv = ["run_experiment.py", "--configs", "all", "--split", "dev", "--limit", "3"]
+sys.argv = ["run_experiment.py", "--configs", "all", "--limit", "3"]
 import run_experiment  # noqa: E402
 run_experiment.main()
 res_files = sorted(p.name for p in config.RESULTS_DIR.glob("C*.jsonl"))
@@ -137,12 +137,12 @@ rec = json.loads((config.RESULTS_DIR / "C7.jsonl").read_text(encoding="utf-8").s
 check("C7 기록에 도구 호출 trace", "trace" in rec["turns"][0] and rec["turns"][0]["trace"]["config"] == "C7")
 c0 = json.loads((config.RESULTS_DIR / "C0.jsonl").read_text(encoding="utf-8").splitlines()[0])
 check("C0는 도구를 쓰지 않음", c0["turns"][0]["trace"]["tool_calls"] == [])
-sys.argv = ["run_experiment.py", "--configs", "C7", "--split", "dev", "--limit", "3"]
+sys.argv = ["run_experiment.py", "--configs", "C7", "--limit", "3"]
 run_experiment.main()
 lines = (config.RESULTS_DIR / "C7.jsonl").read_text(encoding="utf-8").splitlines()
 check("다시 실행하면 끝난 문항은 건너뜀", len(lines) == 9, len(lines))
 
-sys.argv = ["evaluate.py", "--split", "dev"]
+sys.argv = ["evaluate.py"]
 import evaluate  # noqa: E402
 evaluate.main()
 for name in ["item_scores.csv", "Ablation_result.csv", "effects.csv", "stats.csv", "Safety_result.csv",

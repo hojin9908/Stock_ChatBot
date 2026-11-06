@@ -14,3 +14,6 @@ Validation/_safety_judge_cache.json
 # 파이썬 가상환경
 .venv/
 venv/
+
+# PowerPoint 임시 잠금 파일
+~$*

@@ -19,20 +19,17 @@ def write_jsonl(path, rows):
     tmp.replace(path)
 
 
-def load(set_name: str, split: str = "all") -> list:
-    """set_name: qa | multiturn | safety,  split: dev | test | all (safety는 split 구분 없음)."""
-    rows = read_jsonl(config.DATASET_DIR / FILES[set_name])
-    if split != "all" and set_name != "safety":
-        rows = [r for r in rows if r.get("split") == split]
-    return rows
+def load(set_name: str) -> list:
+    """set_name: qa | multiturn | safety. 항상 전체 문항을 돌려준다."""
+    return read_jsonl(config.DATASET_DIR / FILES[set_name])
 
 
-def load_qa(split="all"):
-    return load("qa", split)
+def load_qa():
+    return load("qa")
 
 
-def load_multiturn(split="all"):
-    return load("multiturn", split)
+def load_multiturn():
+    return load("multiturn")
 
 
 def load_safety():

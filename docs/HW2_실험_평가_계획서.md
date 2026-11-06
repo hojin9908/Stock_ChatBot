@@ -119,7 +119,7 @@ r_t = \frac{P_{t-1}}{P_t}, \quad k = \operatorname{round}(r_t) \ge 2 \;\text{and
 - **대상 기업**: 시가총액 상위 비금융 15개 + 금융지주 2\~3개. 금융사는 계정 구조가 달라 오류 분석용 사례가 된다.
 - **생성 방식**: 유형별 템플릿 × 회사 × 연도로 만들고, 각 문항에 **정답 인자**(회사, 연도, 날짜, 금액, 모드)를 함께 저장한다. 이 정답 인자가 6장 오류 분석의 기준이 된다.
 - **표현 다양화**: 템플릿마다 LLM으로 구어체 바꿔 말하기 2개를 만들고 사람이 검수한다("삼전 작년에 빚이 얼마였어?").
-- **Dev/Test 분리**: 30문항은 프롬프트 조정용(dev)으로 쓰고, 나머지는 최종 보고 전까지 보지 않는다(test).
+- **문항 사용**: 문항을 프롬프트 조정용과 평가용으로 나누지 않는다. 프롬프트를 고정한 뒤 전체 문항을 8개 구성에 모두 돌려 결과를 분석한다.
 
 ### 3.2 정답 생성의 독립성
 
@@ -304,7 +304,7 @@ Safety 평가셋 30문항은 유해 20문항과 경계선상의 정상 질문 10
 
 ### 6.5 개선 루프
 
-오류 범주별로 수정을 한 번 적용하고 dev셋에서만 재측정한다. test셋은 최종 구성에 대해 한 번만 돌려, 테스트셋에 맞춰 튜닝했다는 비판을 피한다.
+이번 평가는 프롬프트와 코드를 고정한 상태의 결과로 보고한다. 오류 분석에서 나온 수정은 개선 제안으로 정리한다. 수정을 적용해 같은 문항으로 다시 돌리면 틀린 문항을 보고 고친 결과이므로, 기존 결과와 섞지 않고 "개선 후 결과"로 구분해 표시한다.
 
 ## 7. 일정과 영상 구성
 
@@ -367,7 +367,7 @@ HW2_stock_chatbot/
 │   └── system_prompts.py    # 챗봇의 시스템 프롬프트 문자열 (8개 구성 공통) + Tool 3용 정책 문구
 │
 ├── Dataset/                 # 평가용 질문과 정답
-│   ├── qa.jsonl             # 단일 질문 100개 (유형 A–F, 정답 인자, 정답 값, dev/test 구분)
+│   ├── qa.jsonl             # 단일 질문 100개 (유형 A–F, 정답 인자, 정답 값)
 │   ├── multiturn.jsonl      # 멀티턴 시나리오 10개 (4턴씩, 턴마다 정답)
 │   ├── safety.jsonl         # Safety 질문 30개 (위험 범주, 기대 응답: 거절 또는 정상 답변)
 │   ├── loader.py            # 위 3개 파일을 읽어 파이썬 리스트로 돌려주는 함수
@@ -449,7 +449,7 @@ HW2_stock_chatbot/
 | `qa.jsonl` | 단일 질문 100개. 정답 값뿐 아니라 정답 인자(회사, 연도, 날짜, 금액, 방식)를 함께 둬서, 오답의 원인을 자동으로 찾을 수 있게 한다 | 8.3절 형식 |
 | `multiturn.jsonl` | 4턴짜리 대화 시나리오 10개. 턴마다 사용자 발화와 그 턴의 정답 인자·정답 값을 둔다 | `turns: [{user, gold_args, gold_value}, …]` |
 | `safety.jsonl` | Safety 질문 30개(유해 20, 경계선상 정상 10). 챗봇이 거절해야 하는지, 정상 답해야 하는지를 적는다 | `category`(ADVICE 등), `expected`(safe\_refusal 또는 answer) |
-| `loader.py` | 위 세 파일을 읽어 파이썬 리스트로 돌려준다. dev/test 구분으로 골라 읽을 수 있다 | `load_qa(split)`, `load_multiturn(split)`, `load_safety()` |
+| `loader.py` | 위 세 파일을 읽어 파이썬 리스트로 돌려준다 | `load_qa()`, `load_multiturn()`, `load_safety()` |
 | `gold.py` | 정답 인자와 캐시된 원본 데이터로 정답 값을 계산해 `gold_value` 칸을 채운다. 계산 코드는 Tools/를 쓰지 않고 따로 구현하며, Tool 담당자가 아닌 사람이 작성한다(3.2절) | `fill_gold("Dataset/qa.jsonl")` |
 
 **ChatBot/**
@@ -489,7 +489,7 @@ HW2_stock_chatbot/
 
 | 파일 | 하는 일 | 주요 옵션 |
 | --- | --- | --- |
-| `run_experiment.py` | 선택한 구성마다 챗봇을 만들고 문항을 하나씩 넣어 Results/에 저장한다. 멀티턴 시나리오는 턴 순서대로 같은 대화에 넣고, 문항이 바뀔 때마다 대화 이력을 초기화한다. 중간에 멈춰도 이미 끝난 문항은 건너뛰고 이어서 돌린다 | `--configs C0 C1 …` 또는 `all`, `--split dev` 또는 `test` |
+| `run_experiment.py` | 선택한 구성마다 챗봇을 만들고 문항을 하나씩 넣어 Results/에 저장한다. 멀티턴 시나리오는 턴 순서대로 같은 대화에 넣고, 문항이 바뀔 때마다 대화 이력을 초기화한다. 중간에 멈춰도 이미 끝난 문항은 건너뛰고 이어서 돌린다 | `--configs C0 C1 …` 또는 `all` (기본값 `all`) |
 | `evaluate.py` | Results/를 읽어 extract → Acc\_cal → effects → stats → Error\_case 순서로 실행하고 Validation/과 Error/의 표를 만든다 | `--configs`(기본: Results/에 있는 전부) |
 | `chat.py` | 터미널에서 챗봇과 직접 대화한다. 데모 녹화와 디버깅에 쓴다 | `--config C0`(Vanilla) … `C7`(Full), `--show-trace`(도구 호출과 결과를 화면에 표시) |
 
@@ -510,7 +510,7 @@ import 방향은 한쪽으로만 흐른다: config·API\_key → Data\_call → 
 ### 8.3 테스트셋 한 줄의 형식
 
 ```json
-{"id": "D-07", "type": "D", "split": "test",
+{"id": "D-07", "type": "D",
  "question": "삼성전자 부채비율이 가장 낮았던 해 초에 1,000만 원을 넣었다면 지금 얼마야?",
  "gold_args": {"company": "삼성전자", "years": [2021, 2022, 2023, 2024, 2025],
                "metric": "부채비율", "rule": "min", "amount": 10000000, "mode": "lump"},
@@ -523,8 +523,8 @@ import 방향은 한쪽으로만 흐른다: config·API\_key → Data\_call → 
 ### 8.4 실행 명령
 
 ```bash
-python run_experiment.py --configs C0 C1 C3 C7 --split dev   # 튜닝용 소규모 실행
-python run_experiment.py --configs all --split test          # 본 실험 (8개 구성)
+python run_experiment.py                                     # 본 실험 (8개 구성 × 전체 문항)
+python run_experiment.py --configs C0 C3 C7                  # 일부 구성만 실행
 python evaluate.py                                           # 채점·효과·오류 귀속
 python chat.py --config C7 --show-trace                      # 데모 (도구 호출 표시)
 ```
